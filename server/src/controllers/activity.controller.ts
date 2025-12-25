@@ -5,7 +5,7 @@ export const createActivity = async (req: Request, res: Response) => {
   try {
     const { taskId, note } = req.body;
     const { workspaceId } = req.params;
-
+// create activity log
     const activity = await Activity.create({
       taskId,
       note,
@@ -19,6 +19,7 @@ export const createActivity = async (req: Request, res: Response) => {
   }
 };
 
+// fetch activities
 export const getActivities = async (req: Request, res: Response) => {
   try {
     const { workspaceId } = req.params;

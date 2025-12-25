@@ -1,0 +1,51 @@
+import { Schema, model, Types } from "mongoose";
+
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
+const taskSchema = new Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+    },
+
+    status: {
+      type: String,
+      enum: ["TODO", "IN_PROGRESS", "DONE"],
+      default: "TODO",
+    },
+
+    workspaceId: {
+      type: Types.ObjectId,
+      ref: "Workspace",
+      required: true,
+    },
+
+    assigneeId: {
+      type: Types.ObjectId,
+      ref: "User",
+    },
+
+    createdBy: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    dueDate: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true, // adds createdAt & updatedAt
+  }
+);
+
+const Task = model("Task", taskSchema);
+export default Task;

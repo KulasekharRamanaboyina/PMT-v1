@@ -4,7 +4,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import taskRoutes from "./routes/task.routes";
-// import workspaceRoutes from "./routes/workspace.routes";
+import workspaceRoutes from "./routes/workspace.routes";
 import activityRoutes from "./routes/activity.routes";
 
 const app = express();
@@ -21,11 +21,12 @@ app.get("/", (_req, res) => {
   });
 });
 
+
 /* ---------- Routes ---------- */
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
-// app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/activities", activityRoutes);
 
 /* ---------- 404 ---------- */
