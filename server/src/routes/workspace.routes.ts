@@ -1,22 +1,26 @@
 import { Router } from "express";
+
+import { protect } from "../middlewares/auth.middleware";
+import {
+  checkWorkspaceOwner,
+} from "../middlewares/workspace.middleware";
+
 import {
   getWorkspaces,
   createWorkspace,
   deleteWorkspace,
 } from "../controllers/workspace.controller";
-import { protect } from "../middlewares/auth.middleware"; 
+
 const router = Router();
 
-// 🔐 All workspace routes require authentication
+// 🔐 Auth first
 router.use(protect);
 
-// 📌 Get all workspaces for logged-in user
+// GET & CREATE
 router.get("/", getWorkspaces);
+router.post("/", createWorkspace);
 
-// 📌 Create a new workspace
-router.post("/create-workspace", createWorkspace);
-
-// 📌 Delete a workspace (only owner)
-router.delete("/delete-workspace:workspaceId", deleteWorkspace);
+// DELETE (owner only)
+router.delete("/:workspaceId", checkWorkspaceOwner, deleteWorkspace);
 
 export default router;
