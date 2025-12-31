@@ -6,6 +6,10 @@ export interface IUser extends Document {
   password: string;
   role: "ADMIN" | "MEMBER";
   avatar?: string;
+
+  // 🔐 FORGOT PASSWORD
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -24,7 +28,7 @@ const UserSchema = new Schema<IUser>(
     password: {
       type: String,
       required: true,
-      select: true, // important for login
+      select: true,
     },
     role: {
       type: String,
@@ -33,6 +37,14 @@ const UserSchema = new Schema<IUser>(
     },
     avatar: {
       type: String,
+    },
+
+    // ✅ ADDED FOR RESET PASSWORD
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
     },
   },
   { timestamps: true }

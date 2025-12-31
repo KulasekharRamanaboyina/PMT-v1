@@ -31,6 +31,6 @@ export const getActivities = async (req: Request, res: Response) => {
 
     res.json(activities);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch activities ❌" });
+    res.status(500).json({ message: "Failed to fetch activities " });
   }
 };

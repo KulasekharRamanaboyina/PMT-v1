@@ -1,5 +1,6 @@
 import React from "react";
 import { HashRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { AppProvider, useApp } from "./context/AppContext";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
@@ -105,6 +106,7 @@ const App = () => {
   return (
     <AppProvider>
       <HashRouter>
+        <Toaster reverseOrder={false} />
         <AppRoutes />
       </HashRouter>
     </AppProvider>

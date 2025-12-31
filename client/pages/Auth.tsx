@@ -1,37 +1,56 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { useApp } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import api from "../services/api";
 
 const Auth = () => {
-  const { login, signup } = useApp();
+  const { setAuth } = useApp(); // ✅ FIX
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
-
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (mode === "login") {
-      const success = login(email);
-      if (success) navigate("/");
-      else setError("User not found. Please check your email or sign up.");
-    }
+    try {
+      if (mode === "login") {
+        const res = await api.post("/auth/login", { email, password });
+        const { user, token } = res.data;
 
-    if (mode === "signup") {
-      if (!name.trim()) {
-        setError("Name is required");
-        return;
+        localStorage.setItem("token", token);
+        setAuth(user, token);
+
+        toast.success(`Login successful 🎉 Welcome ${user.name}`);
+        navigate("/");
       }
-      const success = signup(name, email);
-      if (success) navigate("/");
-      else setError("User with this email already exists.");
+
+      if (mode === "signup") {
+        const res = await api.post("/auth/register", {
+          name,
+          email,
+          password,
+        });
+
+        const { user, token } = res.data;
+
+        localStorage.setItem("token", token);
+        setAuth(user, token);
+
+        toast.success("Account created successfully ");
+        navigate("/");
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "Something went wrong ";
+
+      toast.error(msg);
+      setError(msg); // keep existing UI error also
     }
   };
 
@@ -40,7 +59,6 @@ const Auth = () => {
       setError("Please enter your email");
       return;
     }
-
     alert("Password reset link sent to your email (mock)");
     setMode("login");
   };
@@ -70,11 +88,11 @@ const Auth = () => {
             {mode === "forgot" && "Reset your password"}
           </h3>
 
-          {error && (
+          {/* {error && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg">
               {error}
             </div>
-          )}
+          )} */}
 
           {mode !== "forgot" && (
             <form onSubmit={handleSubmit} className="space-y-4">
