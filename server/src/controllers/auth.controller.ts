@@ -130,38 +130,6 @@ await sendEmail({
 };
 
 /* ================= RESET PASSWORD ================= */
-// export const resetPassword = async (req: Request, res: Response) => {
-//   try {
-//     const { token } = req.params;
-//     const { password } = req.body;
-
-//     const hashedToken = crypto
-//       .createHash("sha256")
-//       .update(token)
-//       .digest("hex");
-
-//     const user = await User.findOne({
-//       resetPasswordToken: hashedToken,
-//       resetPasswordExpires: { $gt: new Date() },
-//     });
-
-//     if (!user) {
-//       return res.status(400).json({ message: "Token invalid or expired" });
-//     }
-
-//     user.password = await bcrypt.hash(password, 10);
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpires = undefined;
-
-//     await user.save();
-
-//     res.json({ message: "Password reset successful" });
-//   } catch (error) {
-//     res.status(500).json({ message: "Reset password failed" });
-//   }
-// };
-
-/* ================= RESET PASSWORD ================= */
 export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { token } = req.params;
