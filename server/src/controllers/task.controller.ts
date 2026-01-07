@@ -16,37 +16,66 @@ export const getTasks = async (req: Request, res: Response) => {
 
     res.json(tasks);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch tasks ❌" });
+    res.status(500).json({ message: "Failed to fetch tasks " });
   }
 };
 
 /**
  * CREATE TASK
  */
-export const createTask = async (req: Request, res: Response) => {
+// export const createTask = async (req: Request, res: Response) => {
+//   try {
+//     const { workspaceId } = req.params;
+//     const { title, description, status, assigneeId, dueDate } = req.body;
+
+//     const task = await Task.create({
+//       title,
+//       description,
+//       status: status || "TODO",
+//       assigneeId,
+//       dueDate,
+//       workspaceId,
+//       createdBy: req.user.id,
+//     });
+//     await logActivity({
+//   userId: req.user.id,
+//   workspaceId,
+//   taskId: task._id.toString(),
+//   note: `Created task "${task.title}"`,
+// });
+
+//     res.status(201).json(task);
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to create task :",error });
+//   }
+// };
+export const createTask = async (req: any, res: Response) => {
   try {
+    const { title, description, status, priority, assigneeId, dueDate } =
+      req.body;
     const { workspaceId } = req.params;
-    const { title, description, status, assigneeId, dueDate } = req.body;
+
+    // ✅ HARD VALIDATION
+    if (!title || !priority) {
+      return res.status(400).json({
+        message: "Title and priority are required",
+      });
+    }
 
     const task = await Task.create({
       title,
       description,
       status: status || "TODO",
+      priority, // 🔥 mandatory now
       assigneeId,
       dueDate,
       workspaceId,
       createdBy: req.user.id,
     });
-    await logActivity({
-  userId: req.user.id,
-  workspaceId,
-  taskId: task._id.toString(),
-  note: `Created task "${task.title}"`,
-});
 
     res.status(201).json(task);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create task ❌" });
+    res.status(500).json({ message: "Failed to create task " });
   }
 };
 
@@ -64,7 +93,7 @@ export const updateTask = async (req: Request, res: Response) => {
     );
     
     if (!task) {
-      return res.status(404).json({ message: "Task not found ❌" });
+      return res.status(404).json({ message: "Task not found " });
     }await logActivity({
   userId: req.user.id,
   workspaceId,
@@ -91,7 +120,7 @@ export const deleteTask = async (req: Request, res: Response) => {
     });
    
     if (!task) {
-      return res.status(404).json({ message: "Task not found ❌" });
+      return res.status(404).json({ message: "Task not found " });
     } await logActivity({
   userId: req.user.id,
   workspaceId,
@@ -99,8 +128,8 @@ export const deleteTask = async (req: Request, res: Response) => {
   note: `Deleted task "${task.title}"`,
 });
 
-    res.json({ message: "Task deleted successfully ✅" });
+    res.json({ message: "Task deleted successfully " });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete task ❌" });
+    res.status(500).json({ message: "Failed to delete task " });
   }
 };

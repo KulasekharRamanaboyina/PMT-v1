@@ -14,11 +14,13 @@ export const getWorkspaces = async (req: any, res: Response) => {
 
     const workspaces = await Workspace.find({
       members: userId, 
-    }).sort({ createdAt: -1 });
+    }).populate({path: "owner",select: "name",})
+.populate({path: "members",select: "name",})
+.sort({ createdAt: -1 });
 
     res.json(workspaces);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch workspaces ❌" });
+    res.status(500).json({ message: "Failed to fetch workspaces " });
   }
 };
 
@@ -31,7 +33,7 @@ export const createWorkspace = async (req: any, res: Response) => {
     const userId = req.user.id;
 
     if (!name) {
-      return res.status(400).json({ message: "Workspace name is required ❌" });
+      return res.status(400).json({ message: "Workspace name is required " });
     }
 
     const workspace = await Workspace.create({
@@ -49,7 +51,7 @@ export const createWorkspace = async (req: any, res: Response) => {
     res.status(201).json(workspace);
   } catch (error) {
     console.error("CREATE WORKSPACE ERROR:", error);
-    res.status(500).json({ message: "Failed to create workspace ❌" });
+    res.status(500).json({ message: "Failed to create workspace " });
   }
 };
 
@@ -57,32 +59,39 @@ export const createWorkspace = async (req: any, res: Response) => {
  * DELETE WORKSPACE
  * Only owner can delete
  */
+
 export const deleteWorkspace = async (req: any, res: Response) => {
   try {
-    const { workspaceId } = req.params;
+    const {workspaceId} = req.params;
     const userId = req.user.id;
 
-    const workspace = await Workspace.findOne({
-      _id: workspaceId,
-      owner: userId, 
-    });
-
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    if (workspace.owner.toString() !== userId.toString()) {
       return res.status(403).json({
-        message: "Not authorized to delete this workspace ❌",
+        message: "Only owner can delete this workspace ",
       });
     }
-    await logActivity({
-  userId,
-  workspaceId,
-  note: `Deleted workspace "${workspace.name}"`,
-});
+    
+
 
     await Task.deleteMany({ workspaceId });
+
+    await logActivity({
+      userId,
+      workspaceId,
+      note: `Deleted workspace "${workspace.name}"`,
+    });
+
     await workspace.deleteOne();
 
-    res.json({ message: "Workspace deleted successfully ✅" });
+    res.json({ message: "Workspace deleted successfully " });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete workspace ❌" });
+    console.error("DELETE WORKSPACE ERROR 👉", error);
+    res.status(500).json({ message: "Failed to delete workspace " });
   }
 };
+

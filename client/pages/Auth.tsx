@@ -25,6 +25,7 @@ const Auth = () => {
         const { user, token } = res.data;
 
         localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
         setAuth(user, token);
 
         toast.success(`Login successful 🎉 Welcome ${user.name}`);
@@ -41,6 +42,7 @@ const Auth = () => {
         const { user, token } = res.data;
 
         localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
         setAuth(user, token);
 
         toast.success("Account created successfully ");

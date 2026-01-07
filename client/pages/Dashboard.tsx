@@ -1,37 +1,68 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import api from "../services/api";
 
 import {
   CheckCircle2,
   Clock,
   AlertCircle,
   X,
+  AlertTriangle,
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { TaskStatus, Priority } from "../types";
 
 const Dashboard = () => {
   const { tasks, users, currentWorkspace } = useApp();
+  // const [filterType, setFilterType] = useState<
+  //   "TOTAL" | "CRITICAL" | "PENDING" | "IN_PROGRESS" | "TODAY" | null
+  // >(null);
   const [filterType, setFilterType] = useState<
-    "TOTAL" | "IN_PROGRESS" | "PENDING" | null
+    | "TOTAL"
+    | "CRITICAL"
+    | "PENDING"
+    | "IN_PROGRESS"
+    | "TODAY"
+    | "OVERDUE"
+    | null
   >(null);
 
+  const [dashboard, setDashboard] = useState<any>(null);
+
+  const allTasks = dashboard?.allTasks ?? [];
+
+  console.log("TOTAL COUNT FROM CARDS:", dashboard?.cards?.totalTasks);
+  console.log("TASKS FROM DISTRIBUTION (list):", allTasks.length);
+  console.log("TASK OBJECTS:", allTasks);
+
+  useEffect(() => {
+    if (!currentWorkspace) return;
+
+    api
+      .get(`/dashboard/${currentWorkspace._id}`)
+      .then((res) => setDashboard(res.data))
+      .catch(console.error);
+  }, [currentWorkspace]);
+
   // Statistics
-  const totalTasks = tasks.length;
+  const totalTasks = dashboard?.cards?.totalTasks ?? tasks.length;
 
-  const criticalTasks = tasks.filter(
-    (t) => t.priority === Priority.CRITICAL
-  ).length;
+  const criticalTasks =
+    dashboard?.cards?.criticalTasks ??
+    tasks.filter((t) => t.priority === Priority.CRITICAL).length;
 
-  const tasksToBeDone = tasks.filter(
-    (t) => t.status === TaskStatus.TODO || t.status === TaskStatus.REVIEW
-  ).length;
-
+  const tasksToBeDone =
+    dashboard?.cards?.todoTasks ??
+    tasks.filter(
+      (t) => t.status === TaskStatus.TODO || t.status === TaskStatus.REVIEW
+    ).length;
   const today = new Date().toDateString();
-  const todaysTasks = tasks.filter(
-    (t) => new Date(t.dueDate).toDateString() === today
-  ).length;
+
+  const todaysTasks =
+    dashboard?.cards?.todayTasks ??
+    tasks.filter((t) => new Date(t.dueDate).toDateString() === today).length;
 
   const inProgressTasks = tasks.filter(
     (t) => t.status === TaskStatus.IN_PROGRESS
@@ -66,66 +97,70 @@ const Dashboard = () => {
   ];
 
   const getFilteredTasks = () => {
-    const today = new Date().toDateString();
+    if (!allTasks.length) return [];
+
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
 
     switch (filterType) {
       case "TOTAL":
-        return tasks;
+        return allTasks;
 
       case "CRITICAL":
-        return tasks.filter((t) => t.priority === Priority.CRITICAL);
+        return allTasks.filter((t) => t.priority === Priority.CRITICAL);
 
       case "PENDING":
-        return tasks.filter(
+        return allTasks.filter(
           (t) => t.status === TaskStatus.TODO || t.status === TaskStatus.REVIEW
         );
 
       case "IN_PROGRESS":
-        return tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS);
+        return allTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS);
 
-      case "TODAY": {
-        const todayDate = new Date();
-        todayDate.setHours(0, 0, 0, 0);
-
-        return tasks.filter((t) => {
-          const dueDate = new Date(t.dueDate);
-          dueDate.setHours(0, 0, 0, 0);
-
+      case "TODAY":
+        return allTasks.filter((t) => {
+          if (!t.dueDate) return false;
+          const due = new Date(t.dueDate);
+          due.setHours(0, 0, 0, 0);
           return (
-            dueDate.getTime() === todayDate.getTime() &&
+            due.getTime() === todayDate.getTime() &&
             t.status !== TaskStatus.DONE
           );
         });
-      }
+      case "OVERDUE":
+        return allTasks.filter((t) => {
+          if (!t.dueDate) return false;
+
+          const due = new Date(t.dueDate);
+          due.setHours(0, 0, 0, 0);
+
+          return due < todayDate && t.status !== TaskStatus.DONE;
+        });
 
       default:
         return [];
     }
   };
+
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
 
   const tomorrowDate = new Date(todayDate);
   tomorrowDate.setDate(todayDate.getDate() + 1);
 
-  const todaysTasksList = tasks.filter((t) => {
-    const d = new Date(t.dueDate);
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() === todayDate.getTime() && t.status !== TaskStatus.DONE;
-  });
+  const todaysTasksList = dashboard?.distribution?.today ?? [];
 
-  const tomorrowsTasksList = tasks.filter((t) => {
-    const d = new Date(t.dueDate);
-    d.setHours(0, 0, 0, 0);
-    return (
-      d.getTime() === tomorrowDate.getTime() && t.status !== TaskStatus.DONE
-    );
-  });
+  const tomorrowsTasksList = dashboard?.distribution?.tomorrow ?? [];
 
-  const upcomingTasksList = tasks.filter((t) => {
-    const d = new Date(t.dueDate);
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() > tomorrowDate.getTime() && t.status !== TaskStatus.DONE;
+  const upcomingTasksList = dashboard?.distribution?.upcoming ?? [];
+
+  const overdueTasks = allTasks.filter((t) => {
+    if (!t.dueDate) return false;
+
+    const due = new Date(t.dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    return due < todayDate && t.status !== TaskStatus.DONE;
   });
 
   const getFilterTitle = () => {
@@ -140,12 +175,14 @@ const Dashboard = () => {
         return "In Progress Tasks";
       case "TODAY":
         return "Today's Tasks";
+      case "OVERDUE":
+        return "overdueTasks";
       default:
         return "";
     }
   };
   const navigate = useNavigate();
-
+  console.log("Dashboard tasks:", tasks);
   return (
     <div className="p-8 space-y-8 bg-gray-50 dark:bg-gray-900 min-h-screen pl-72 transition-colors duration-200">
       <header className="flex justify-between items-center">
@@ -163,7 +200,7 @@ const Dashboard = () => {
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <StatCard
           icon={CheckCircle2}
           label="Total Tasks"
@@ -174,7 +211,7 @@ const Dashboard = () => {
         />
 
         <StatCard
-          icon={AlertCircle}
+          icon={AlertTriangle}
           label="Critical Tasks"
           value={criticalTasks}
           color="text-red-600 dark:text-red-400"
@@ -198,6 +235,14 @@ const Dashboard = () => {
           color="text-indigo-600 dark:text-indigo-400"
           bg="bg-indigo-50 dark:bg-indigo-900/20"
           onClick={() => setFilterType("TODAY")}
+        />
+        <StatCard
+          icon={AlertCircle}
+          label="Overdue Tasks"
+          value={overdueTasks.length}
+          color="text-red-600 dark:text-red-400"
+          bg="bg-red-50 dark:bg-red-900/20"
+          onClick={() => setFilterType("OVERDUE")}
         />
       </div>
 
@@ -296,15 +341,24 @@ const Dashboard = () => {
             </div>
 
             <div className="p-6 overflow-y-auto">
-              {getFilteredTasks().map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => navigate("/board")}
-                  className="p-4 mb-2  border-b border-gray-700 last:border-b-0 rounded-lg cursor-pointer hover:text-white transition-colors"
-                >
-                  <h4 className="font-semibold text-gray-400">{task.title}</h4>
-                </div>
-              ))}
+              {getFilteredTasks().length === 0 ? (
+                <p className="text-center text-gray-400">No tasks found</p>
+              ) : (
+                getFilteredTasks().map((task) => (
+                  <div
+                    key={task._id || task.id}
+                    onClick={() => navigate("/board")}
+                    className="p-4 mb-2 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-gray-700/40 transition"
+                  >
+                    <h4 className="font-semibold text-white">{task.title}</h4>
+                    {task.dueDate && (
+                      <p className="text-xs text-gray-400">
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

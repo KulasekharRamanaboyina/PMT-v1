@@ -21,6 +21,6 @@ router.get("/", getWorkspaces);
 router.post("/", createWorkspace);
 
 // DELETE (owner only)
-router.delete("/:workspaceId", checkWorkspaceOwner, deleteWorkspace);
+router.delete("/:workspaceId",protect,deleteWorkspace);
 
 export default router;

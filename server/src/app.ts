@@ -6,6 +6,7 @@ import userRoutes from "./routes/user.routes";
 import taskRoutes from "./routes/task.routes";
 import workspaceRoutes from "./routes/workspace.routes";
 import activityRoutes from "./routes/activity.routes";
+import dashboardRoutes from "./routes/dashboard.routes"
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/workspaces/:workspaceId/tasks", taskRoutes);
 app.use("/api/workspaces/:workspaceId/activities", activityRoutes);
 app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/dashboard",dashboardRoutes)
 
 /* ---------- 404 ---------- */
 app.use((_req, res) => {

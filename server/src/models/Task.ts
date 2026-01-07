@@ -20,7 +20,11 @@ const taskSchema = new Schema(
       enum: ["TODO", "IN_PROGRESS", "DONE"],
       default: "TODO",
     },
-
+    priority: {
+      type: String,
+      enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      require:"true",
+    },
     workspaceId: {
       type: Types.ObjectId,
       ref: "Workspace",
@@ -46,6 +50,11 @@ const taskSchema = new Schema(
     timestamps: true, // adds createdAt & updatedAt
   }
 );
+taskSchema.index(
+  { title: 1, workspaceId: 1 },
+  { unique: true }
+);
+
 
 const Task = model("Task", taskSchema);
 export default Task;
