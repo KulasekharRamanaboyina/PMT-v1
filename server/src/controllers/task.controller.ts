@@ -82,30 +82,51 @@ export const createTask = async (req: any, res: Response) => {
 /**
  * UPDATE TASK
  */
-export const updateTask = async (req: Request, res: Response) => {
+export const updateTask = async (req: any, res: Response) => {
   try {
     const { workspaceId, taskId } = req.params;
 
+    const {
+      title,
+      description,
+      status,
+      priority,
+      assigneeId,
+      dueDate,
+      sourceLink,
+    } = req.body;
+
     const task = await Task.findOneAndUpdate(
       { _id: taskId, workspaceId },
-      req.body,
+      {
+        title,
+        description,
+        status,
+        priority,
+        assigneeId,
+        dueDate,
+        sourceLink,
+      },
       { new: true }
     );
-    
+
     if (!task) {
-      return res.status(404).json({ message: "Task not found " });
-    }await logActivity({
-  userId: req.user.id,
-  workspaceId,
-  taskId: task._id.toString(),
-  note: `Updated task "${task.title}"`,
-});
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    await logActivity({
+      userId: req.user.id,
+      workspaceId,
+      taskId: task._id.toString(),
+      note: `Updated task "${task.title}"`,
+    });
 
     res.json(task);
   } catch (error) {
     res.status(500).json({ message: "Failed to update task ❌" });
   }
 };
+
 
 /**
  * DELETE TASK

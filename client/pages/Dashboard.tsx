@@ -16,9 +16,6 @@ import { TaskStatus, Priority } from "../types";
 
 const Dashboard = () => {
   const { tasks, users, currentWorkspace } = useApp();
-  // const [filterType, setFilterType] = useState<
-  //   "TOTAL" | "CRITICAL" | "PENDING" | "IN_PROGRESS" | "TODAY" | null
-  // >(null);
   const [filterType, setFilterType] = useState<
     | "TOTAL"
     | "CRITICAL"
@@ -33,9 +30,9 @@ const Dashboard = () => {
 
   const allTasks = dashboard?.allTasks ?? [];
 
-  console.log("TOTAL COUNT FROM CARDS:", dashboard?.cards?.totalTasks);
-  console.log("TASKS FROM DISTRIBUTION (list):", allTasks.length);
-  console.log("TASK OBJECTS:", allTasks);
+  // console.log("TOTAL COUNT FROM CARDS:", dashboard?.cards?.totalTasks);
+  // console.log("TASKS FROM DISTRIBUTION (list):", allTasks.length);
+  // console.log("TASK OBJECTS:", allTasks);
 
   useEffect(() => {
     if (!currentWorkspace) return;

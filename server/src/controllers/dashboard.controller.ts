@@ -36,10 +36,10 @@ export const getDashboardStats = async (req: any, res: Response) => {
       dueDate: { $gte: todayStart, $lte: todayEnd },
     });
 
-    const overdueTasks = await Task.find({
+const overdueTasks = await Task.find({
   workspaceId,
   dueDate: { $lt: todayStart },
-  status: { $ne: "DONE" },
+  status: { $in: ["TODO", "IN_PROGRESS"] },
 });
 
     const tomorrowStart = new Date(todayStart);

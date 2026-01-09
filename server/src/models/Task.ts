@@ -45,6 +45,10 @@ const taskSchema = new Schema(
     dueDate: {
       type: Date,
     },
+    sourceLink: {
+      type: String,
+      trim: true,
+         }
   },
   {
     timestamps: true, // adds createdAt & updatedAt

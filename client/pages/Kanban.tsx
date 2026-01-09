@@ -17,10 +17,16 @@ import {
 } from "lucide-react";
 
 const Kanban = () => {
-  const { tasks, moveTask, users, addTask, updateTask, deleteTask } = useApp();
+  // const { tasks, moveTask, users, addTask, updateTask, deleteTask } = useApp();
+  const { tasks, moveTask, addTask, updateTask, deleteTask } = useApp();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskSourceLink, setNewTaskSourceLink] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus | "">("");
+  const [newTaskPriority, setNewTaskPriority] = useState<Priority | "">("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
 
   // State for editing tasks
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -75,35 +81,73 @@ const Kanban = () => {
     moveTask(draggableId, destination.droppableId as TaskStatus);
   };
 
+  // const handleAddTask = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!newTaskTitle.trim()) return;
+  //   addTask({
+  //     title: newTaskTitle,
+  //     description: "",
+  //     status: TaskStatus.TODO,
+  //     priority: Priority.MEDIUM,
+  //     assigneeId: users[0].id,
+  //     dueDate: new Date().toISOString(),
+  //     tags: ["New"],
+  //     sourceLink: newTaskSourceLink || undefined,
+  //   });
+
+  //   setNewTaskTitle("");
+  //   setIsModalOpen(false);
+  // };
+
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+
+    if (!newTaskTitle || !newTaskStatus || !newTaskPriority) return;
+
     addTask({
       title: newTaskTitle,
-      description: "",
-      status: TaskStatus.TODO,
-      priority: Priority.MEDIUM,
-      assigneeId: users[0].id,
-      dueDate: new Date().toISOString(),
-      tags: ["New"],
+      description: newTaskDescription,
+      status: newTaskStatus,
+      priority: newTaskPriority,
+      dueDate: newTaskDueDate
+        ? new Date(newTaskDueDate).toISOString()
+        : undefined,
       sourceLink: newTaskSourceLink || undefined,
     });
 
     setNewTaskTitle("");
+    setNewTaskSourceLink("");
+    setNewTaskDescription("");
+    setNewTaskStatus("");
+    setNewTaskPriority("");
+    setNewTaskDueDate("");
     setIsModalOpen(false);
   };
 
   const handleUpdateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTask) return;
-    updateTask(editingTask.id, editingTask);
+    // updateTask(editingTask._id, editingTask);
+    updateTask(editingTask._id, {
+      title: editingTask.title,
+      description: editingTask.description,
+      status: editingTask.status,
+      priority: editingTask.priority,
+      assigneeId:
+        typeof editingTask.assigneeId === "object"
+          ? editingTask.assigneeId._id
+          : editingTask.assigneeId,
+      dueDate: editingTask.dueDate,
+      sourceLink: editingTask.sourceLink,
+    });
+
     setEditingTask(null);
   };
 
   const handleDeleteTask = () => {
     if (!editingTask) return;
     if (window.confirm("Are you sure you want to delete this task?")) {
-      deleteTask(editingTask.id);
+      deleteTask(editingTask._id);
       setEditingTask(null);
     }
   };
@@ -155,7 +199,7 @@ const Kanban = () => {
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className={`flex-1 p-3 overflow-y-auto custom-scrollbar transition-colors ${
+                    className={`flex-1 p-3 overflow-y-auto custom-scrollbar transition-colors min-h-[200px] ${
                       snapshot.isDraggingOver
                         ? "bg-gray-200/50 dark:bg-gray-700/50"
                         : ""
@@ -165,8 +209,8 @@ const Kanban = () => {
                       .filter((t) => t.status === col.id)
                       .map((task, index) => (
                         <Draggable
-                          key={task.id}
-                          draggableId={task.id}
+                          key={task._id}
+                          draggableId={task._id}
                           index={index}
                         >
                           {(provided, snapshot) => (
@@ -234,15 +278,19 @@ const Kanban = () => {
                                     className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center overflow-hidden border border-white dark:border-gray-500 ring-1 ring-gray-100 dark:ring-gray-600"
                                     title="Assigned"
                                   >
-                                    <img
+                                    {/* <img
                                       src={
                                         users.find(
-                                          (u) => u.id === task.assigneeId
+                                          (u) =>
+                                            u.id ===
+                                            (typeof task.assigneeId === "object"
+                                              ? task.assigneeId._id
+                                              : task.assigneeId)
                                         )?.avatar
                                       }
                                       alt="Avatar"
                                       className="w-full h-full object-cover"
-                                    />
+                                    /> */}
                                   </div>
                                 )}
                               </div>
@@ -263,10 +311,13 @@ const Kanban = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 shadow-xl border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white text-center">
               Add New Task
             </h3>
             <form onSubmit={handleAddTask}>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Task title
+              </label>
               <input
                 type="text"
                 autoFocus
@@ -275,6 +326,54 @@ const Kanban = () => {
                 placeholder="Task title..."
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Description
+              </label>
+              <textarea
+                placeholder="Description"
+                value={newTaskDescription}
+                onChange={(e) => setNewTaskDescription(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Task priority
+              </label>
+              <select
+                value={newTaskPriority}
+                onChange={(e) => setNewTaskPriority(e.target.value as Priority)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select Priority</option>
+                {Object.values(Priority).map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Due date
+              </label>
+              <input
+                type="date"
+                value={newTaskDueDate}
+                onChange={(e) => setNewTaskDueDate(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Task status
+              </label>
+              <select
+                value={newTaskStatus}
+                onChange={(e) => setNewTaskStatus(e.target.value as TaskStatus)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select Status</option>
+                {Object.values(TaskStatus).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Source Link
@@ -407,7 +506,11 @@ const Kanban = () => {
                     </label>
                     <div className="relative">
                       <select
-                        value={editingTask.assigneeId}
+                        value={
+                          typeof editingTask.assigneeId === "object"
+                            ? editingTask.assigneeId._id
+                            : editingTask.assigneeId
+                        }
                         onChange={(e) =>
                           setEditingTask({
                             ...editingTask,
@@ -416,11 +519,11 @@ const Kanban = () => {
                         }
                         className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-800 dark:text-white appearance-none"
                       >
-                        {users.map((u) => (
+                        {/* {users.map((u) => (
                           <option key={u.id} value={u.id}>
                             {u.name}
                           </option>
-                        ))}
+                        ))} */}
                       </select>
                       <UserIcon
                         className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500"
@@ -437,7 +540,11 @@ const Kanban = () => {
                     <div className="relative">
                       <input
                         type="date"
-                        value={editingTask.dueDate.split("T")[0]}
+                        value={
+                          editingTask.dueDate
+                            ? editingTask.dueDate.split("T")[0]
+                            : ""
+                        }
                         onChange={(e) =>
                           setEditingTask({
                             ...editingTask,
@@ -481,12 +588,28 @@ const Kanban = () => {
                     type="url"
                     placeholder="https://github.com"
                     value={editingTask.sourceLink || ""}
-                    onChange={(e) =>
+                    // onChange={(e) =>
+                    //   setEditingTask({
+                    //     ...editingTask,
+                    //     sourceLink: e.target.value,
+                    //   })
+                    // }
+                    onChange={(e) => {
+                      let value = e.target.value;
+
+                      if (
+                        value &&
+                        !value.startsWith("http://") &&
+                        !value.startsWith("https://")
+                      ) {
+                        value = "https://" + value;
+                      }
+
                       setEditingTask({
                         ...editingTask,
-                        sourceLink: e.target.value,
-                      })
-                    }
+                        sourceLink: value,
+                      });
+                    }}
                     className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
                 </div>

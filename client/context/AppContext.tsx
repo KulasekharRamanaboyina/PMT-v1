@@ -58,6 +58,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   //  FIX: store ALL tasks
   const [allTasks, setAllTasks] = useState<Task[]>([]);
+  // console.log("SAMPLE TASK:", allTasks[0]);
 
   const [activities] = useState<ActivityLog[]>([]);
 
@@ -78,11 +79,93 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async () => false;
   const signup = async () => false;
+  // add or create task
+  const addTask = async (task: Omit<Task, "id" | "workspaceId">) => {
+    try {
+      if (!currentWorkspace) return;
 
-  const addTask = () => {};
-  const updateTask = () => {};
-  const moveTask = () => {};
-  const deleteTask = () => {};
+      const res = await api.post(`/workspaces/${currentWorkspace._id}/tasks`, {
+        ...task,
+        workspaceId: currentWorkspace._id,
+      });
+
+      // add new task to state
+      setAllTasks((prev) => [...prev, res.data]);
+    } catch (err) {
+      console.error("Add task failed", err);
+    }
+  };
+  // update task
+  // const updateTask = async (id: string, updates: Partial<Task>) => {
+  //   try {
+  //     const res = await api.patch(`/tasks/${id}`, updates);
+  //     setAllTasks((prev) =>
+  //       prev.map((t) => (String(t._id) === String(id) ? res.data : t))
+  //     );
+  //   } catch (err) {
+  //     console.error("Update task failed", err);
+  //   }
+  // };
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    try {
+      if (!currentWorkspace) return;
+
+      const res = await api.put(
+        `/workspaces/${currentWorkspace._id}/tasks/${id}`,
+        updates
+      );
+
+      setAllTasks((prev) =>
+        prev.map((t) => (String(t._id) === String(id) ? res.data : t))
+      );
+    } catch (err) {
+      console.error("Update task failed", err);
+    }
+  };
+
+  // move Task
+  // const moveTask = async (id: string, status: TaskStatus) => {
+  //   try {
+  //     // optimistic UI
+  //     setAllTasks((prev) =>
+  //       prev.map((t) => (String(t._id) === String(id) ? { ...t, status } : t))
+  //     );
+  //     // backend persist
+  //     await api.patch(`/tasks/${id}`, { status });
+  //   } catch (err) {
+  //     console.error("Move task failed", err);
+  //   }
+  // };
+  const moveTask = async (id: string, status: TaskStatus) => {
+    try {
+      if (!currentWorkspace) return;
+
+      // optimistic UI
+      setAllTasks((prev) =>
+        prev.map((t) => (String(t._id) === String(id) ? { ...t, status } : t))
+      );
+
+      // backend persist
+      await api.put(`/workspaces/${currentWorkspace._id}/tasks/${id}`, {
+        status,
+      });
+    } catch (err) {
+      console.error("Move task failed", err);
+    }
+  };
+
+  // delete task
+  const deleteTask = async (id: string) => {
+    try {
+      if (!currentWorkspace) return;
+
+      await api.delete(`/workspaces/${currentWorkspace._id}/tasks/${id}`);
+
+      setAllTasks((prev) => prev.filter((t) => String(t._id) !== String(id)));
+    } catch (err) {
+      console.error("Delete task failed", err);
+    }
+  };
 
   const createWorkspace = async (name: string, description?: string) => {
     try {
@@ -135,23 +218,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
 
     fetchWorkspaces();
-  }, [token]);
+  }, [token, currentWorkspace]);
 
-  // 🔹 FETCH ALL TASKS (NO workspace filter)
+  //  FETCH ALL TASKS (NO workspace filter)
   useEffect(() => {
-    if (!token) return;
+    if (!token || !currentWorkspace) return;
 
-    const fetchAllTasks = async () => {
+    const fetchTasks = async () => {
       try {
-        const res = await api.get(`/tasks/${currentWorkspace._id}`);
-        setAllTasks(res.data.tasks);
+        const res = await api.get(`/workspaces/${currentWorkspace._id}/tasks`);
+        setAllTasks(res.data);
       } catch (err) {
         console.error("Fetch tasks failed", err);
       }
     };
 
-    fetchAllTasks();
-  }, [token]);
+    fetchTasks();
+  }, [token, currentWorkspace]);
+  console.log("ALL TASKS LENGTH:", allTasks.length);
 
   return (
     <AppContext.Provider
@@ -164,9 +248,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         currentWorkspace,
 
         //  FIX: workspace-wise derived tasks
+        // tasks: currentWorkspace
+        //   ? allTasks.filter(
+        //       (t) => String(t.workspaceId) === String(currentWorkspace._id)
+        //     )
+        //   : [],
         tasks: currentWorkspace
           ? allTasks.filter(
-              (t) => String(t.workspaceId) === String(currentWorkspace._id)
+              (t) =>
+                String(t.workspaceId || t.workspace?._id) ===
+                String(currentWorkspace._id)
             )
           : [],
 
