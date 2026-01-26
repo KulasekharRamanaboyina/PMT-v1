@@ -12,11 +12,19 @@ export const getWorkspaces = async (req: any, res: Response) => {
   try {
     const userId = req.user.id;
 
-    const workspaces = await Workspace.find({
-      members: userId, 
-    }).populate({path: "owner",select: "name",})
-.populate({path: "members",select: "name",})
+ const workspaces = await Workspace.find({
+  members: userId,
+})
+.populate({
+  path: "owner",
+  select: "name email avatar",
+})
+.populate({
+  path: "members",
+  select: "name email avatar",
+})
 .sort({ createdAt: -1 });
+
 
     res.json(workspaces);
   } catch (error) {
@@ -90,8 +98,9 @@ export const deleteWorkspace = async (req: any, res: Response) => {
 
     res.json({ message: "Workspace deleted successfully " });
   } catch (error) {
-    console.error("DELETE WORKSPACE ERROR 👉", error);
+    console.error("DELETE WORKSPACE ERROR", error);
     res.status(500).json({ message: "Failed to delete workspace " });
   }
 };
+
 

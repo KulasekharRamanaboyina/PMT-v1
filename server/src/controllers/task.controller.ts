@@ -67,9 +67,10 @@ export const createTask = async (req: any, res: Response) => {
       description,
       status: status || "TODO",
       priority, // 🔥 mandatory now
-      assigneeId,
+  
       dueDate,
       workspaceId,
+        assigneeId: assigneeId || req.user.id,
       createdBy: req.user.id,
     });
 

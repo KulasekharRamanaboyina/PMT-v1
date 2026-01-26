@@ -11,7 +11,7 @@ import { User, Workspace, Task, ActivityLog, TaskStatus } from "../types";
 interface AppContextType {
   user: User | null;
   token: string | null;
-
+  users: User[];
   setAuth: (user: User, token: string) => void;
   logout: () => void;
 
@@ -45,22 +45,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
+    localStorage.getItem("token"),
   );
 
+  const [users, setUsers] = useState<User[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
     () => {
       const stored = localStorage.getItem("currentWorkspace");
       return stored ? JSON.parse(stored) : null;
-    }
+    },
   );
+  const [myTasks, setMyTasks] = useState<Task[]>([]);
 
   //  FIX: store ALL tasks
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   // console.log("SAMPLE TASK:", allTasks[0]);
 
-  const [activities] = useState<ActivityLog[]>([]);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
 
   const setAuth = (user: User, token: string) => {
     setUser(user);
@@ -79,6 +81,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async () => false;
   const signup = async () => false;
+
   // add or create task
   const addTask = async (task: Omit<Task, "id" | "workspaceId">) => {
     try {
@@ -112,11 +115,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
       const res = await api.put(
         `/workspaces/${currentWorkspace._id}/tasks/${id}`,
-        updates
+        updates,
       );
 
       setAllTasks((prev) =>
-        prev.map((t) => (String(t._id) === String(id) ? res.data : t))
+        prev.map((t) => (String(t._id) === String(id) ? res.data : t)),
       );
     } catch (err) {
       console.error("Update task failed", err);
@@ -142,7 +145,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
       // optimistic UI
       setAllTasks((prev) =>
-        prev.map((t) => (String(t._id) === String(id) ? { ...t, status } : t))
+        prev.map((t) => (String(t._id) === String(id) ? { ...t, status } : t)),
       );
 
       // backend persist
@@ -183,7 +186,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteWorkspace = async (id: string) => {
     console.log("Deleting workspace:", id);
     try {
-      await api.delete(`/workspaces/${currentWorkspace?._id || id}`);
+      // await api.delete(`/workspaces/${currentWorkspace?._id || id}`);
+      await api.delete(`/workspaces/${id}`);
 
       setWorkspaces((prev) => prev.filter((w) => w._id !== id));
 
@@ -199,6 +203,39 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addMember = () => {};
   const logActivity = () => {};
+  // log Activity
+  // useEffect(() => {
+  //   if (!token || !currentWorkspace) return;
+
+  //   const fetchActivities = async () => {
+  //     try {
+  //       const res = await api.get(
+  //         `/workspaces/${currentWorkspace._id}/activities`
+  //       );
+  //       setActivities(res.data);
+  //     } catch (err) {
+  //       console.error("Fetch activities failed", err);
+  //     }
+  //   };
+
+  //   fetchActivities();
+  // }, [token, currentWorkspace]);
+  // ✅ FETCH ALL TASKS (for MyDashboard)
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchAllTasks = async () => {
+      try {
+        const res = await api.get("/tasks"); // 👈 ALL tasks
+        setAllTasks(res.data);
+        console.log("ALL TASKS LOADED:", res.data.length);
+      } catch (err) {
+        console.error("Fetch all tasks failed", err);
+      }
+    };
+
+    fetchAllTasks();
+  }, [token]);
 
   // 🔹 FETCH WORKSPACES
   useEffect(() => {
@@ -207,7 +244,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const fetchWorkspaces = async () => {
       try {
         const res = await api.get("/workspaces");
-        setWorkspaces(res.data);
+        setWorkspaces([...res.data].reverse());
 
         if (res.data.length > 0 && !currentWorkspace) {
           setCurrentWorkspace(res.data[0]);
@@ -236,33 +273,44 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     fetchTasks();
   }, [token, currentWorkspace]);
   console.log("ALL TASKS LENGTH:", allTasks.length);
+  // Fetch all users
+  useEffect(() => {
+    if (!token || !currentWorkspace) return;
+
+    const fetchUsers = async () => {
+      try {
+        const res = await api.get(
+          `/workspaces/${currentWorkspace._id}/members`,
+        );
+        setUsers(res.data);
+      } catch (err) {
+        console.error("Fetch users failed", err);
+      }
+    };
+
+    fetchUsers();
+  }, [token, currentWorkspace]);
 
   return (
     <AppContext.Provider
       value={{
         user,
         token,
+        users,
         setAuth,
         logout,
         workspaces,
         currentWorkspace,
-
-        //  FIX: workspace-wise derived tasks
-        // tasks: currentWorkspace
-        //   ? allTasks.filter(
-        //       (t) => String(t.workspaceId) === String(currentWorkspace._id)
-        //     )
-        //   : [],
+        allTasks,
         tasks: currentWorkspace
           ? allTasks.filter(
               (t) =>
                 String(t.workspaceId || t.workspace?._id) ===
-                String(currentWorkspace._id)
+                String(currentWorkspace._id),
             )
           : [],
 
         activities,
-        // setCurrentWorkspace,
         setCurrentWorkspace: (ws) => {
           setCurrentWorkspace(ws);
           if (ws) {
