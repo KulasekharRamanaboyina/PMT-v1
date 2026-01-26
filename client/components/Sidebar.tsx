@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  ListTodo,
   Kanban,
   Calendar,
   Users,
@@ -22,8 +21,6 @@ import {
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Workspace } from "../types";
-import MyDashboard from "@/pages/MyDashboard";
-import { Label } from "recharts";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -62,8 +59,7 @@ const Sidebar = () => {
   const [wsInfo, setWsInfo] = useState<Workspace | null>(null);
 
   const navItems = [
-    // { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-    { icon: ListTodo, label: "MyDashboard", path: "/tasks" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: Kanban, label: "Board", path: "/board" },
     { icon: Calendar, label: "Calendar", path: "/calendar" },
     { icon: Users, label: "Team", path: "/team" },
@@ -96,7 +92,6 @@ const Sidebar = () => {
   const handleWsClick = (ws: Workspace) => {
     setCurrentWorkspace(ws);
     setIsWsOpen(false);
-    navigate("/workspace");
   };
 
   // Open Modal and reset preview to current user avatar
@@ -156,10 +151,7 @@ const Sidebar = () => {
             Nexus
           </span>
         </div>
-      </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
         <div className="relative">
           <button
             onClick={() => setIsWsOpen(!isWsOpen)}
@@ -240,6 +232,10 @@ const Sidebar = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Navigation Links */}
+      <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -350,7 +346,7 @@ const Sidebar = () => {
                   <p className="font-bold text-gray-900 dark:text-white">
                     {new Date(selectedWsInfo.createdAt).toLocaleDateString(
                       undefined,
-                      { dateStyle: "long" },
+                      { dateStyle: "long" }
                     )}
                   </p>
                 </div>

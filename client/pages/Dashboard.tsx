@@ -30,6 +30,10 @@ const Dashboard = () => {
 
   const allTasks = dashboard?.allTasks ?? [];
 
+  // console.log("TOTAL COUNT FROM CARDS:", dashboard?.cards?.totalTasks);
+  // console.log("TASKS FROM DISTRIBUTION (list):", allTasks.length);
+  // console.log("TASK OBJECTS:", allTasks);
+
   useEffect(() => {
     if (!currentWorkspace) return;
 
@@ -49,7 +53,7 @@ const Dashboard = () => {
   const tasksToBeDone =
     dashboard?.cards?.todoTasks ??
     tasks.filter(
-      (t) => t.status === TaskStatus.TODO || t.status === TaskStatus.REVIEW,
+      (t) => t.status === TaskStatus.TODO || t.status === TaskStatus.REVIEW
     ).length;
   const today = new Date().toDateString();
 
@@ -58,11 +62,11 @@ const Dashboard = () => {
     tasks.filter((t) => new Date(t.dueDate).toDateString() === today).length;
 
   const inProgressTasks = tasks.filter(
-    (t) => t.status === TaskStatus.IN_PROGRESS,
+    (t) => t.status === TaskStatus.IN_PROGRESS
   ).length;
 
   const completedTasks = tasks.filter(
-    (t) => t.status === TaskStatus.DONE,
+    (t) => t.status === TaskStatus.DONE
   ).length;
 
   // Chart Data
@@ -103,7 +107,9 @@ const Dashboard = () => {
         return allTasks.filter((t) => t.priority === Priority.CRITICAL);
 
       case "PENDING":
-        return allTasks.filter((t) => t.status === TaskStatus.TODO);
+        return allTasks.filter(
+          (t) => t.status === TaskStatus.TODO || t.status === TaskStatus.REVIEW
+        );
 
       case "IN_PROGRESS":
         return allTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS);
@@ -172,31 +178,21 @@ const Dashboard = () => {
         return "";
     }
   };
-  const statusStyle: Record<string, string> = {
-    TODO: "text-red-400",
-    IN_PROGRESS: "text-orange-400",
-    REVIEW: "text-blue-400",
-    DONE: "text-green-400",
-  };
-
   const navigate = useNavigate();
   console.log("Dashboard tasks:", tasks);
-
-  console.log("Workspace:", currentWorkspace?.name);
-  console.log("Tasks:", tasks.length);
-
   return (
     <div className="p-8 space-y-8 bg-gray-50 dark:bg-gray-900 min-h-screen pl-72 transition-colors duration-200">
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            <p className="text-gray-500 dark:text-gray-400">
-              Overview for{" "}
-              <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                {currentWorkspace?.name}
-              </span>
-            </p>
+            Dashboard
           </h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            Overview for{" "}
+            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+              {currentWorkspace?.name}
+            </span>
+          </p>
         </div>
       </header>
 
@@ -346,26 +342,17 @@ const Dashboard = () => {
                 <p className="text-center text-gray-400">No tasks found</p>
               ) : (
                 getFilteredTasks().map((task) => (
-                  <div className="flex items-start justify-between gap-4 p-4 mb-2 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-gray-700/40 transition">
-                    <div
-                      key={task._id || task.id}
-                      onClick={() => navigate("/board")}
-                    >
-                      <h4 className="font-semibold text-white">{task.title}</h4>
-
-                      {task.dueDate && (
-                        <p className="text-xs text-gray-400">
-                          Due: {new Date(task.dueDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full font-medium ${
-                        statusStyle[task.status]
-                      }`}
-                    >
-                      {task.status.replace("_", " ")}
-                    </span>
+                  <div
+                    key={task._id || task.id}
+                    onClick={() => navigate("/board")}
+                    className="p-4 mb-2 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-gray-700/40 transition"
+                  >
+                    <h4 className="font-semibold text-white">{task.title}</h4>
+                    {task.dueDate && (
+                      <p className="text-xs text-gray-400">
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
                 ))
               )}

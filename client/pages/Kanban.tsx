@@ -17,9 +17,8 @@ import {
 } from "lucide-react";
 
 const Kanban = () => {
-  const { tasks, moveTask, addTask, updateTask, deleteTask, currentWorkspace } =
-    useApp();
-  // const { tasks, moveTask, addTask, updateTask, deleteTask } = useApp();
+  // const { tasks, moveTask, users, addTask, updateTask, deleteTask } = useApp();
+  const { tasks, moveTask, addTask, updateTask, deleteTask } = useApp();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -31,8 +30,6 @@ const Kanban = () => {
 
   // State for editing tasks
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
-  const [newTaskAssignee, setNewTaskAssignee] = useState("");
 
   const columns = [
     {
@@ -84,6 +81,24 @@ const Kanban = () => {
     moveTask(draggableId, destination.droppableId as TaskStatus);
   };
 
+  // const handleAddTask = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!newTaskTitle.trim()) return;
+  //   addTask({
+  //     title: newTaskTitle,
+  //     description: "",
+  //     status: TaskStatus.TODO,
+  //     priority: Priority.MEDIUM,
+  //     assigneeId: users[0].id,
+  //     dueDate: new Date().toISOString(),
+  //     tags: ["New"],
+  //     sourceLink: newTaskSourceLink || undefined,
+  //   });
+
+  //   setNewTaskTitle("");
+  //   setIsModalOpen(false);
+  // };
+
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -94,7 +109,6 @@ const Kanban = () => {
       description: newTaskDescription,
       status: newTaskStatus,
       priority: newTaskPriority,
-      assigneeId: newTaskAssignee || undefined,
       dueDate: newTaskDueDate
         ? new Date(newTaskDueDate).toISOString()
         : undefined,
@@ -132,9 +146,10 @@ const Kanban = () => {
 
   const handleDeleteTask = () => {
     if (!editingTask) return;
-    deleteTask(editingTask._id);
-    setEditingTask(null);
-    setShowDeletePopup(false);
+    if (window.confirm("Are you sure you want to delete this task?")) {
+      deleteTask(editingTask._id);
+      setEditingTask(null);
+    }
   };
 
   return (
@@ -193,25 +208,28 @@ const Kanban = () => {
                     {tasks
                       .filter((t) => t.status === col.id)
                       .map((task, index) => (
-                        <React.Fragment key={task._id}>
-                          <Draggable draggableId={task._id} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                onClick={() => setEditingTask(task)}
-                                className={`${getTaskColorStyles(
-                                  task.priority
-                                )} p-4 rounded-lg shadow-sm mb-3 border group hover:shadow-md transition-all cursor-pointer ${
-                                  snapshot.isDragging
-                                    ? "shadow-lg rotate-2 ring-2 ring-indigo-500"
-                                    : ""
-                                }`}
-                              >
-                                <div className="flex justify-between items-start mb-2">
-                                  <span
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
+                        <Draggable
+                          key={task._id}
+                          draggableId={task._id}
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              onClick={() => setEditingTask(task)}
+                              className={`${getTaskColorStyles(
+                                task.priority
+                              )} p-4 rounded-lg shadow-sm mb-3 border group hover:shadow-md transition-all cursor-pointer ${
+                                snapshot.isDragging
+                                  ? "shadow-lg rotate-2 ring-2 ring-indigo-500"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
                                     ${
                                       task.priority === Priority.CRITICAL
                                         ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
@@ -221,73 +239,64 @@ const Kanban = () => {
                                         ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
                                         : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                                     }`}
-                                  >
-                                    {task.priority}
-                                  </span>
-                                </div>
-                                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug">
-                                  {task.title}
-                                </h4>
-                                {/* task link */}
-                                {task.sourceLink && (
-                                  <a
-                                    href={task.sourceLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="text-xs text-indigo-500 hover:underline"
-                                  >
-                                    Open source →
-                                  </a>
-                                )}
-
-                                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-3">
-                                  <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-1">
-                                      <CalendarIcon size={12} />
-                                      <span>
-                                        {new Date(
-                                          task.dueDate
-                                        ).toLocaleDateString(undefined, {
-                                          month: "short",
-                                          day: "numeric",
-                                        })}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  {task.assigneeId && (
-                                    <div
-                                      className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center overflow-hidden border border-white dark:border-gray-500 ring-1 ring-gray-100 dark:ring-gray-600"
-                                      title="Assigned"
-                                    >
-                                      {(() => {
-                                        const member =
-                                          currentWorkspace?.members?.find(
-                                            (m) =>
-                                              m._id ===
-                                              (typeof task.assigneeId ===
-                                              "object"
-                                                ? task.assigneeId._id
-                                                : task.assigneeId)
-                                          );
-
-                                        return (
-                                          member?.avatar && (
-                                            <img
-                                              src={member.avatar}
-                                              alt="Avatar"
-                                              className="w-full h-full object-cover"
-                                            />
-                                          )
-                                        );
-                                      })()}
-                                    </div>
-                                  )}
-                                </div>
+                                >
+                                  {task.priority}
+                                </span>
                               </div>
-                            )}
-                          </Draggable>
-                        </React.Fragment>
+                              <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug">
+                                {task.title}
+                              </h4>
+                              {/* task link */}
+                              {task.sourceLink && (
+                                <a
+                                  href={task.sourceLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-indigo-500 hover:underline"
+                                >
+                                  Open source →
+                                </a>
+                              )}
+
+                              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    <CalendarIcon size={12} />
+                                    <span>
+                                      {new Date(
+                                        task.dueDate
+                                      ).toLocaleDateString(undefined, {
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                                {task.assigneeId && (
+                                  <div
+                                    className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center overflow-hidden border border-white dark:border-gray-500 ring-1 ring-gray-100 dark:ring-gray-600"
+                                    title="Assigned"
+                                  >
+                                    {/* <img
+                                      src={
+                                        users.find(
+                                          (u) =>
+                                            u.id ===
+                                            (typeof task.assigneeId === "object"
+                                              ? task.assigneeId._id
+                                              : task.assigneeId)
+                                        )?.avatar
+                                      }
+                                      alt="Avatar"
+                                      className="w-full h-full object-cover"
+                                    /> */}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
                       ))}
                     {provided.placeholder}
                   </div>
@@ -341,22 +350,6 @@ const Kanban = () => {
                   </option>
                 ))}
               </select>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-11">
-                Assignee
-              </label>
-              <select
-                value={newTaskAssignee}
-                onChange={(e) => setNewTaskAssignee(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">Select Assignee</option>
-                {currentWorkspace?.members?.map((m) => (
-                  <option key={m._id} value={m._id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Due date
               </label>
@@ -426,7 +419,7 @@ const Kanban = () => {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowDeletePopup(true)}
+                    onClick={handleDeleteTask}
                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     title="Delete Task"
                   >
@@ -526,12 +519,11 @@ const Kanban = () => {
                         }
                         className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-800 dark:text-white appearance-none"
                       >
-                        <option value="">Select Assignee</option>
-                        {currentWorkspace?.members?.map((m) => (
-                          <option key={m._id} value={m._id}>
-                            {m.name}
+                        {/* {users.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name}
                           </option>
-                        ))}
+                        ))} */}
                       </select>
                       <UserIcon
                         className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500"
@@ -639,34 +631,6 @@ const Kanban = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-      {/* delete popup */}
-      {showDeletePopup && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-80 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-              Delete Task?
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">
-              This action cannot be undone.
-            </p>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeletePopup(false)}
-                className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteTask}
-                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
           </div>
         </div>
       )}
