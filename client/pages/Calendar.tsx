@@ -21,7 +21,8 @@ import {
 import { Task, TaskStatus, Priority } from "../types";
 
 const Calendar = () => {
-  const { tasks, users, addTask, updateTask, deleteTask } = useApp();
+  const { tasks, users, addTask, updateTask, deleteTask, currentWorkspace } =
+    useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Modal State
@@ -29,6 +30,7 @@ const Calendar = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -40,11 +42,11 @@ const Calendar = () => {
 
   const nextMonth = () =>
     setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
     );
   const prevMonth = () =>
     setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
     );
 
   const handleDayClick = (date: Date) => {
@@ -64,16 +66,14 @@ const Calendar = () => {
     // Set time to noon to avoid timezone rolling over on simple date conversion
     const due = new Date(selectedDate);
     due.setHours(12, 0, 0, 0);
-
     addTask({
       title: newTaskTitle,
       description: "",
       status: TaskStatus.TODO,
       priority: Priority.MEDIUM,
-      assigneeId: users[0].id,
       dueDate: due.toISOString(),
-      tags: [],
     });
+
     setNewTaskTitle("");
     setIsAddModalOpen(false);
   };
@@ -81,16 +81,25 @@ const Calendar = () => {
   const handleUpdateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTask) return;
-    updateTask(editingTask.id, editingTask);
+    updateTask(editingTask._id, {
+      title: editingTask.title,
+      description: editingTask.description,
+      status: editingTask.status,
+      priority: editingTask.priority,
+      assigneeId:
+        typeof editingTask.assigneeId === "object"
+          ? editingTask.assigneeId._id
+          : editingTask.assigneeId,
+      dueDate: editingTask.dueDate,
+    });
     setEditingTask(null);
   };
 
   const handleDeleteTask = () => {
     if (!editingTask) return;
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      deleteTask(editingTask.id);
-      setEditingTask(null);
-    }
+    deleteTask(editingTask._id);
+    setEditingTask(null);
+    setShowDeletePopup(false);
   };
 
   return (
@@ -142,7 +151,7 @@ const Calendar = () => {
 
           {daysInMonth.map((day) => {
             const dayTasks = tasks.filter((t) =>
-              isSameDay(new Date(t.dueDate), day)
+              isSameDay(new Date(t.dueDate), day),
             );
             return (
               <div
@@ -169,7 +178,7 @@ const Calendar = () => {
                 <div className="space-y-1">
                   {dayTasks.map((task) => (
                     <div
-                      key={task.id}
+                      key={task._id}
                       onClick={(e) => handleTaskClick(e, task)}
                       className={`text-xs p-1.5 rounded border truncate cursor-pointer hover:opacity-80 transition-all shadow-sm
                         ${
@@ -245,7 +254,9 @@ const Calendar = () => {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={handleDeleteTask}
+                    onClick={() => {
+                      setShowDeletePopup(true);
+                    }}
                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     title="Delete Task"
                   >
@@ -341,9 +352,10 @@ const Calendar = () => {
                         }
                         className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white dark:bg-gray-700 text-gray-800 dark:text-white appearance-none"
                       >
-                        {users.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name}
+                        <option value="">Select Assignee</option>
+                        {currentWorkspace?.members?.map((m) => (
+                          <option key={m._id} value={m._id}>
+                            {m.name}
                           </option>
                         ))}
                       </select>
@@ -415,6 +427,34 @@ const Calendar = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delete task popup */}
+      {showDeletePopup && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-80 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+              Delete Task?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">
+              This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeletePopup(false)}
+                className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteTask}
+                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

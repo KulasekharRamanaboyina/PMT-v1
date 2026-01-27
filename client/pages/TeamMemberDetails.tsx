@@ -87,7 +87,7 @@ const TeamMemberDetails = () => {
           <div className="space-y-3">
             {assignedTasks.map((task) => (
               <div
-                key={task.id}
+                key={task._id}
                 className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex justify-between items-center">

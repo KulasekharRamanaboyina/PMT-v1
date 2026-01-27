@@ -9,6 +9,8 @@ import Calendar from "./pages/Calendar";
 import Team from "./pages/Team";
 import Auth from "./pages/Auth";
 import TeamMemberDetails from "./pages/TeamMemberDetails";
+import MyTasks from "./pages/MyTasks";
+import MyDashboard from "./pages/MyDashboard";
 // Activity placeholder
 const ActivityView = () => {
   const { activities } = useApp();
@@ -88,7 +90,8 @@ const AppRoutes = () => {
       />
 
       <Route element={<ProtectedLayout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<MyDashboard />} />
+        <Route path="/workspace" element={<Dashboard />} />
         <Route path="/board" element={<Kanban />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/team" element={<Team />} />
