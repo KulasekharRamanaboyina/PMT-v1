@@ -29,8 +29,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/workspaces/:workspaceId/tasks", taskRoutes);
 app.use("/api/workspaces/:workspaceId/activities", activityRoutes);
 app.use("/api/workspaces", workspaceRoutes);
-app.use("/api/dashboard",dashboardRoutes)
-
+app.use("/api/dashboard",dashboardRoutes);
+app.use("/api/tasks",taskRoutes);
 /* ---------- 404 ---------- */
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });
