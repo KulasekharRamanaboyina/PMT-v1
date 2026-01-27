@@ -103,18 +103,4 @@ export const deleteWorkspace = async (req: any, res: Response) => {
   }
 };
 
-export const getWorkspaceMembers = async (req: any, res: any) => {
-  const { workspaceId } = req.params;
-
-  const workspace = await Workspace.findById(workspaceId).populate(
-    "members",
-    "-password"
-  );
-
-  if (!workspace) {
-    return res.status(404).json({ message: "Workspace not found" });
-  }
-
-  res.json(workspace.members);
-};
 

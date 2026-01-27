@@ -19,7 +19,6 @@ api.interceptors.request.use(
 );
 
 
-
 /* ================= AUTH APIs ================= */
 
 export const login = (data: any) => {

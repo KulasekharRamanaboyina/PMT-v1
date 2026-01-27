@@ -11,30 +11,12 @@ import {
   deleteTask,
 } from "../controllers/task.controller";
 
-// const router = Router({ mergeParams: true });
-
-// // 🔐 Auth first
-// router.use(protect);
-
-// // 🏢 Workspace member check
-// router.use(checkWorkspaceMember);
-
-// // READ & CREATE
-// router.get("/", getTasks);
-// router.post("/", createTask);
-
-// // UPDATE & DELETE
-// router.put("/:taskId", checkTaskExists, updateTask);
-// router.delete("/:taskId", checkTaskExists, deleteTask);
-
-// export default router;
-
 const router = Router({ mergeParams: true });
 
-// 🔐 Auth always
+// 🔐 Auth first
 router.use(protect);
 
-// 🏢 Workspace check ONLY for workspace routes
+// 🏢 Workspace member check
 router.use(checkWorkspaceMember);
 
 // READ & CREATE

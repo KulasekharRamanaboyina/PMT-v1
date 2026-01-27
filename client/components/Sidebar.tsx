@@ -64,7 +64,7 @@ const Sidebar = () => {
   const navItems = [
     // { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: ListTodo, label: "MyDashboard", path: "/tasks" },
-    { icon: Kanban, label: "Kanban", path: "/board" },
+    { icon: Kanban, label: "Board", path: "/board" },
     { icon: Calendar, label: "Calendar", path: "/calendar" },
     { icon: Users, label: "Team", path: "/team" },
     { icon: Activity, label: "Activity", path: "/activity" },
