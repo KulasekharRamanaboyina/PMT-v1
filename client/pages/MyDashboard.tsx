@@ -3,8 +3,9 @@ import { useApp } from "../context/AppContext";
 const MyDashboard = () => {
   const { user, allTasks } = useApp();
 
-  if (!user) return null;
-
+  if (!user) {
+    return <div className="p-6">Loading your dashboard...</div>;
+  }
   const myTasks = allTasks.filter((t) => {
     if (!t.assigneeId || !user) return false;
 
@@ -21,13 +22,6 @@ const MyDashboard = () => {
   );
 
   const completed = myTasks.filter((t) => t.status === "DONE");
-  console.log("ALL TASKS:", allTasks.length);
-  console.log(
-    "CURRENT WS TASKS:",
-    allTasks.filter(
-      (t) => String(t.workspaceId) === String(currentWorkspace?._id),
-    ).length,
-  );
 
   return (
     <div className="p-8 pl-72 bg-gray-50 dark:bg-gray-900 min-h-screen">

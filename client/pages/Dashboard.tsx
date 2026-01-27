@@ -203,6 +203,7 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <StatCard
+          key="total"
           icon={CheckCircle2}
           label="Total Tasks"
           value={totalTasks}
@@ -212,6 +213,7 @@ const Dashboard = () => {
         />
 
         <StatCard
+          key="critical"
           icon={AlertTriangle}
           label="Critical Tasks"
           value={criticalTasks}
@@ -221,6 +223,7 @@ const Dashboard = () => {
         />
 
         <StatCard
+          key="todo"
           icon={Clock}
           label="Tasks To Be Done"
           value={tasksToBeDone}
@@ -230,6 +233,7 @@ const Dashboard = () => {
         />
 
         <StatCard
+          key="today"
           icon={CalendarIcon}
           label="Today’s Tasks"
           value={todaysTasks}
@@ -238,6 +242,7 @@ const Dashboard = () => {
           onClick={() => setFilterType("TODAY")}
         />
         <StatCard
+          key="overdue"
           icon={AlertCircle}
           label="Overdue Tasks"
           value={overdueTasks.length}
@@ -265,7 +270,7 @@ const Dashboard = () => {
             <ul className="list-disc list-inside space-y-1 text-gray-300">
               {todaysTasksList.map((task) => (
                 <li
-                  key={task.id}
+                  key={task._id || task.id}
                   onClick={() => navigate("/board")}
                   className="cursor-pointer hover:text-white transition-colors"
                 >
@@ -289,7 +294,7 @@ const Dashboard = () => {
             <ul className="list-disc list-inside space-y-1 text-gray-300">
               {tomorrowsTasksList.map((task) => (
                 <li
-                  key={task.id}
+                  key={task._id || task.id}
                   onClick={() => navigate("/board")}
                   className="cursor-pointer hover:text-white transition-colors"
                 >
@@ -313,7 +318,7 @@ const Dashboard = () => {
             <ul className="list-disc list-inside space-y-1 text-gray-300">
               {upcomingTasksList.map((task) => (
                 <li
-                  key={task.id}
+                  key={task._id || task.id}
                   onClick={() => navigate("/board")}
                   className="cursor-pointer hover:text-white transition-colors"
                 >

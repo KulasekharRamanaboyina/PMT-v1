@@ -6,7 +6,8 @@ import userRoutes from "./routes/user.routes";
 import taskRoutes from "./routes/task.routes";
 import workspaceRoutes from "./routes/workspace.routes";
 import activityRoutes from "./routes/activity.routes";
-import dashboardRoutes from "./routes/dashboard.routes"
+import dashboardRoutes from "./routes/dashboard.routes";
+import userTaskRoutes from "./routes/userTask.routes";
 
 const app = express();
 
@@ -30,7 +31,7 @@ app.use("/api/workspaces/:workspaceId/tasks", taskRoutes);
 app.use("/api/workspaces/:workspaceId/activities", activityRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/dashboard",dashboardRoutes);
-app.use("/api/tasks",taskRoutes);
+app.use("/api/tasks",userTaskRoutes);
 /* ---------- 404 ---------- */
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });
